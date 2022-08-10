@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import secrets as s
 from pathlib import Path
 from datetime import date, timedelta
 from typing import Optional
@@ -71,6 +70,20 @@ def check_valid_status(status: str):
         sys.exit()
 
 
+def check_valid_type(new_type: str):
+    """
+    Check if provided status is valid for an element
+    """
+    try:
+        assert new_type in [
+            'E', 'T', 'C'
+        ], ("Status should be '(E)xtract', '(T)opic' or '(C)ontent'.",
+            "Changes Aborted.")
+    except AssertionError as msg:
+        print(msg)
+        sys.exit()
+
+
 def today() -> date:
     """
     Returns todays date
@@ -85,12 +98,18 @@ def tomorrow() -> date:
     return date.today() + timedelta(1)
 
 
-def gen_id(col: Collection, size: int = 5) -> str:
+def _get_max_id(col: Collection) -> int:
     """
-    Generates a random string based on the defined lexicon
+    Returns the highest base 10 id from Collection
     """
-    lexicon = ("1234567890"
-               + "abcdefghijklmnopqrstuvwxyz"
-               + "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    item_id: str = "".join([s.choice(lexicon) for _ in range(size)])
-    return (item_id if item_id not in col else gen_id(col))
+    return max((int(_) for _ in col.keys()))
+
+
+def gen_id(col: Collection) -> str:
+    """
+    Generates a sequential decimal id
+    """
+    last_id: int = _get_max_id(col)
+    new_id: str = str(last_id + 1)
+    padding: str = "0" * (5 - len(new_id))
+    return padding + new_id

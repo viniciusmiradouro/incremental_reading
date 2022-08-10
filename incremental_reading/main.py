@@ -10,9 +10,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 from cli import args
-from interface import add_task, change_status, list_collection, remove_element
-from interface import list_due, save_collection, execute_repetition
+from interface import change_priority, list_collection, remove_element
+from interface import change_dependece, list_due, save_collection
 from interface import load_collection, add_content, add_extract, donify_element
+from interface import add_task, change_status, change_type, execute_repetition
 from type_declarations import Collection
 
 PATH: Path = args.Path
@@ -96,6 +97,27 @@ def alterations() -> None:
         change_status(COLLECTION, element_id, new_status)
         changed = True
 
+    # Changes an element type
+    elif args.change_type:
+        element_id: str = args.change_type[0]
+        new_type: str = args.change_type[1]
+        change_type(COLLECTION, element_id, new_type)
+        changed = True
+
+    # Changes an element type
+    elif args.change_dependence:
+        element_id: str = args.change_dependence[0]
+        new_dependecy: list[Optional[str]] = args.change_dependence[1:]
+        change_dependece(COLLECTION, element_id, new_dependecy)
+        changed = True
+
+    # Changes an element type
+    elif args.change_priority:
+        element_id: str = args.change_priority[0]
+        new_priority: float = float(args.change_priority[1])
+        change_priority(COLLECTION, element_id, new_priority)
+        changed = True
+
     # Marks Element as done
     elif args.donify:
         element_id: str = args.donify[0]
@@ -128,10 +150,6 @@ def main() -> None:
     deletions()
     alterations()
     outputs()
-    # for i in COLLECTION.keys():
-    #     if COLLECTION[i]['type'] == 'T':
-    #         COLLECTION[i]['type'] = 'C'
-    # save_collection(COLLECTION, PATH)
 
 
 if __name__ == "__main__":

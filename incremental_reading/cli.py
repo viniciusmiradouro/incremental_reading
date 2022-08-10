@@ -20,7 +20,12 @@ arg_group.add_argument("-e", "--add_extract", action='store', nargs="+")
 arg_group.add_argument("-l", "--list_collection", action='store_true')
 arg_group.add_argument("-D", "--donify", action='store', type=str, nargs=1)
 arg_group.add_argument("-rm", "--remove", action='store', type=str, nargs="+")
+arg_group.add_argument("-W", "--change_dependence", action='store', nargs="+")
 arg_group.add_argument("-s", "--change_status",
                        action='store', type=str, nargs=2)
+arg_group.add_argument("-T", "--change_type",
+                       action='store', type=str, nargs=2)
+arg_group.add_argument("-P", "--change_priority",
+                       action='store', nargs=2)
 
 args = parser.parse_args()

@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import pickle
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 from scheduler import schedule_element
-from helpers import gen_id, today, tomorrow
-from helpers import check_valid_elements, check_valid_status
-from helpers import check_valid_path, check_valid_element, check_valid_priority
 from type_declarations import Element, Queue, Collection
+from helpers import check_valid_elements, check_valid_status
+from helpers import check_valid_type, gen_id, today, tomorrow
+from helpers import check_valid_path, check_valid_element, check_valid_priority
 
 
 # IO to Collections
@@ -46,10 +46,13 @@ def save_collection(col: Collection, path: Path) -> None:
 # Adding topics
 def _mk_content(col: Collection, name: str,
                 consume_point: str, priority: float,
-                waiting: list[Optional[str]] = [None]) -> Element:
+                waiting: list[Optional[str]] = []) -> Element:
     """
     Builds a topic entry for a given collection
     """
+    if not waiting:
+        waiting = [None]
+
     topic: Element = {
         'id': gen_id(col), 'name': name,
         'consume_point': consume_point, 'parent_id': None,
@@ -87,7 +90,7 @@ def _mk_extract(col: Collection, parent_id: str,
         'id': gen_id(col), 'name': name,
         'consume_point': None, 'parent_id': parent_id,
         'type': "E", 'due': tomorrow(), 'last_interval': 1,
-        'rep_num': 0, 'status': 'Active', 'waiting': [],
+        'rep_num': 0, 'status': 'Active', 'waiting': [None],
         'priority': parent_priority
     }
     return extract
@@ -127,7 +130,7 @@ def add_task(col: Collection, name: str, priority: float) -> None:
     new_task: Element = _mk_task(col, name, priority)
     col |= {new_task['id']: new_task}
     print(
-        f"Extract [{new_task['id']}] '{new_task['name']}' added to collection.")
+        f"Task [{new_task['id']}] '{new_task['name']}' added to collection.")
 
 
 # Print Due Queue
@@ -147,7 +150,7 @@ def _sort_due(queue: Queue) -> Queue:
     Sorts a Queue of elements by their priority from lowest to highest and
     after their type from extracts to topics
     """
-    order = {'T': 0, 'E': 1, 'C': 2}
+    order = {'T': 2, 'E': 0, 'C': 1}
     return sorted(queue, key=lambda element: (element['priority'],
                                               order[element['type']]))
 
@@ -232,4 +235,37 @@ def change_status(col: Collection, element_id: str, new_status: str) -> None:
     col[element_id]['status'] = new_status
     print(
         f"Changed element [{element_id}] '{col[element_id]['name']}'"
-        + "status to '{new_status}'")
+        + f"status to '{new_status}'")
+
+
+def change_type(col: Collection, element_id: str, new_type: str) -> None:
+    """
+    Changes element type
+    """
+    check_valid_element(col, element_id)
+    check_valid_type(new_type)
+    col[element_id]['type'] = new_type
+    print(
+        f"Changed element [{element_id}] '{col[element_id]['name']}' "
+        + f"type to '{new_type}'")
+
+
+def change_dependece(col: Collection, element_id: str,
+                     new_dependency: list[Optional[str]]) -> None:
+    """
+    Changes element dependeces
+    """
+    check_valid_element(col, element_id)
+    for _id in new_dependency:
+        if _id is not None:
+            check_valid_element(col, _id)
+    col[element_id]['waiting'] = new_dependency
+
+
+def change_priority(col: Collection, element_id: str, new_priority: float):
+    """
+    Changes element priority
+    """
+    check_valid_element(col, element_id)
+    check_valid_priority(new_priority)
+    col[element_id]['priority'] = new_priority
