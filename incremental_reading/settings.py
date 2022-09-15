@@ -5,5 +5,7 @@ from pathlib import Path
 
 DEFAULTPATH: Path = Path('/home/vm/.cache/collection.pickle')
 EASINESS: float = 2
-BASEINTERVAL: int = 1
-MAXINTERVAL: int = 1095
+ABSBASEINTERVAL: int = 1
+ABSMAXINTERVAL: int = 182
+CONTENT_PERCENTAGE: float = .20
+RANDOMNESS: int = 20

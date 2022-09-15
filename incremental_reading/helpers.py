@@ -5,7 +5,25 @@ import sys
 from pathlib import Path
 from datetime import date, timedelta
 from typing import Optional
-from type_declarations import Collection
+from type_declarations import Collection, Element
+
+
+def check_is_due(element: Element):
+    """
+    Check if element is due today
+    """
+    if element['due'] > today():
+        print("Element is not due today. Cannot execute repetition.")
+        sys.exit()
+
+
+def check_element_not_waiting(element: Element):
+    """
+    Check if element is not waiting for others
+    """
+    if element['waiting'] == [None]:
+        print("Element is in wait. Cannot execute repetition.")
+        sys.exit()
 
 
 def check_valid_priority(priority: float):

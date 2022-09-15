@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# TODO: func to smoothen priority
-# TODO: func change elements properties
-# TODO: func add randomness to q
-# TODO: func dependence chain adding
-
 import sys
 from pathlib import Path
 from typing import Optional
 from cli import args
-from interface import change_priority, list_collection, remove_element
+from settings import RANDOMNESS
+from interface import change_name, change_priority, list_collection
+from interface import remove_element, change_cousins
 from interface import change_dependece, list_due, save_collection
 from interface import load_collection, add_content, add_extract, donify_element
 from interface import add_task, change_status, change_type, execute_repetition
@@ -104,18 +101,32 @@ def alterations() -> None:
         change_type(COLLECTION, element_id, new_type)
         changed = True
 
-    # Changes an element type
+    # Changes an element dependeces
     elif args.change_dependence:
         element_id: str = args.change_dependence[0]
         new_dependecy: list[Optional[str]] = args.change_dependence[1:]
         change_dependece(COLLECTION, element_id, new_dependecy)
         changed = True
 
-    # Changes an element type
+    # Changes an element cousins
+    elif args.change_cousins:
+        element_id: str = args.change_cousins[0]
+        new_cousins: list[Optional[str]] = args.change_cousins[1:]
+        change_cousins(COLLECTION, element_id, new_cousins)
+        changed = True
+
+    # Changes an element priority
     elif args.change_priority:
         element_id: str = args.change_priority[0]
         new_priority: float = float(args.change_priority[1])
         change_priority(COLLECTION, element_id, new_priority)
+        changed = True
+
+    # Changes an element name
+    elif args.rename:
+        element_id: str = args.rename[0]
+        new_name: str = args.rename[1]
+        change_name(COLLECTION, element_id, new_name)
         changed = True
 
     # Marks Element as done
@@ -139,7 +150,7 @@ def outputs() -> None:
     # Lists first 5 Elements due today
     elif args.due_queue:
         stop_at = args.due_queue
-        list_due(COLLECTION, stop_at)
+        list_due(COLLECTION, stop_at, RANDOMNESS)
 
 
 def main() -> None:
@@ -150,8 +161,8 @@ def main() -> None:
     deletions()
     alterations()
     outputs()
+    sys.exit()
 
 
 if __name__ == "__main__":
     main()
-    sys.exit()
