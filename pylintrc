@@ -85,7 +85,7 @@ persistent=yes
 py-version=3.10
 
 # Discover python modules and packages in the file system subtree.
-recursive=yes
+recursive=no
 
 # When enabled, pylint would attempt to guess common misconfiguration and emit
 # user-friendly hints instead of false-positive error messages.
@@ -166,7 +166,7 @@ enable=c-extension-no-member
 
 # This flag controls whether inconsistent-quotes generates a warning when the
 # character used as a quote delimiter is used inconsistently within a module.
-check-quote-consistency=no
+check-quote-consistency=yes
 
 # This flag controls whether the implicit-str-concat should generate a warning
 # on implicit string concatenation in sequences defined over several lines.
@@ -183,7 +183,7 @@ additional-builtins=
 allow-global-unused-variables=yes
 
 # List of names allowed to shadow builtins
-allowed-redefined-builtins=
+allowed-redefined-builtins=yes
 
 # List of strings which can identify a callback function by name. A callback
 # name must start or end with one of those strings.
@@ -297,31 +297,31 @@ exclude-too-few-public-methods=
 ignored-parents=
 
 # Maximum number of arguments for function / method.
-max-args=5
+max-args=4
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=6
 
 # Maximum number of boolean expressions in an if statement (see R0916).
-max-bool-expr=5
+max-bool-expr=4
 
 # Maximum number of branch for function / method body.
-max-branches=12
+max-branches=10
 
 # Maximum number of locals for function / method body.
-max-locals=15
+max-locals=12
 
 # Maximum number of parents for a class (see R0901).
-max-parents=7
+max-parents=6
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=16
 
 # Maximum number of return / yield for function / method body.
-max-returns=6
+max-returns=5
 
 # Maximum number of statements in function / method body.
-max-statements=50
+max-statements=40
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2
@@ -402,7 +402,7 @@ min-similarity-lines=4
 [REFACTORING]
 
 # Maximum number of nested blocks for function / method body
-max-nested-blocks=5
+max-nested-blocks=4
 
 # Complete name of functions that never returns. When checking for
 # inconsistent-return-statements if a never returning function is called then
@@ -438,7 +438,7 @@ spelling-store-unknown-words=no
 [BASIC]
 
 # Naming style matching correct argument names.
-argument-naming-style=snake_case
+argument-naming-style=any
 
 # Regular expression matching correct argument names. Overrides argument-
 # naming-style. If left empty, argument names will be checked with the set
@@ -498,10 +498,10 @@ const-naming-style=UPPER_CASE
 
 # Minimum line length for functions/classes that require docstrings, shorter
 # ones are exempt.
-docstring-min-length=-1
+docstring-min-length=0
 
 # Naming style matching correct function names.
-function-naming-style=snake_case
+function-naming-style=any
 
 # Regular expression matching correct function names. Overrides function-
 # naming-style. If left empty, function names will be checked with the set
@@ -532,14 +532,14 @@ inlinevar-naming-style=any
 #inlinevar-rgx=
 
 # Naming style matching correct method names.
-method-naming-style=snake_case
+method-naming-style=any
 
 # Regular expression matching correct method names. Overrides method-naming-
 # style. If left empty, method names will be checked with the set naming style.
 #method-rgx=
 
 # Naming style matching correct module names.
-module-naming-style=snake_case
+module-naming-style=any
 
 # Regular expression matching correct module names. Overrides module-naming-
 # style. If left empty, module names will be checked with the set naming style.
@@ -551,7 +551,7 @@ name-group=
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
-no-docstring-rgx=^_
+# no-docstring-rgx=^_
 
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.
@@ -563,7 +563,7 @@ property-classes=abc.abstractproperty
 #typevar-rgx=
 
 # Naming style matching correct variable names.
-variable-naming-style=snake_case
+variable-naming-style=any
 
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style. If left empty, variable names will be checked with the set
@@ -598,10 +598,10 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=79
+max-line-length=120
 
 # Maximum number of lines in a module.
-max-module-lines=1000
+max-module-lines=800
 
 # Allow the body of a class to be on the same line as the declaration if body
 # contains single statement.

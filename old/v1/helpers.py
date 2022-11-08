@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.11
 # -*- coding: utf-8 -*-
 
 import sys
-from pathlib import Path
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Optional
+
 from type_declarations import Collection, Element
 
 
@@ -120,7 +121,7 @@ def _get_max_id(col: Collection) -> int:
     """
     Returns the highest base 10 id from Collection
     """
-    return max((int(_) for _ in col.keys()))
+    return max((int(_) for _ in col.keys())) if len(col.keys()) > 0 else 0
 
 
 def gen_id(col: Collection) -> str:

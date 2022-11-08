@@ -9,9 +9,9 @@ from cli import args
 
 def main() -> None:
     if args.reschedule:
-        reviewFiles(args.Path, date.today())
+        reviewFiles(args.Path, .2, date.today())
     else:
-        outputQueue(args.Path, date.today(), 20)
+        outputQueue(args.Path, date.today())
 
 
 if __name__ == '__main__':

@@ -1,14 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.11
 # -*- coding: utf-8 -*-
 
 import pickle
-from random import randint, choice
+from datetime import timedelta
 from pathlib import Path
+from random import choice, randint
 from typing import Any, Optional
-from settings import CONTENT_PERCENTAGE
-from scheduler import schedule_element
-from type_declarations import Element, Queue, Collection
+
 import helpers as h
+from scheduler import schedule_element, schedule_postpone
+from settings import (CONTENT_BASEINT, CONTENT_PERCENTAGE, CONTENT_RANDOMNESS,
+                      DUE_SHUFFLE, EXTRACT_RANDOMNESS)
+from type_declarations import Collection, Element, Queue
 
 
 # IO to Collections
@@ -17,7 +20,7 @@ def create_collection(path: Path) -> None:
     Creates a Collection at path
     """
     h.check_valid_path(path)
-    with open(path, "xb") as file:
+    with open(path, 'xb') as file:
         pickle.dump({}, file)
 
 
@@ -27,7 +30,7 @@ def load_collection(path: Path) -> Collection:
     """
     h.check_valid_path(path)
     if path.is_file():
-        with open(path, "rb") as file:
+        with open(path, 'rb') as file:
             col: Collection = pickle.load(file)
         return col
     create_collection(path)
@@ -39,14 +42,16 @@ def save_collection(col: Collection, path: Path) -> None:
     Saves a Collection at path
     """
     h.check_valid_path(path)
-    with open(path, "wb") as file:
+    with open(path, 'wb') as file:
         pickle.dump(col, file)
 
 
 # Adding topics
-def _mk_content(col: Collection, name: str,
-                consume_point: str, priority: float,
-                waiting: list[Optional[str]] = []) -> Element:
+def _mk_content(
+        col: Collection, name: str,
+        consume_point: str, priority: float,
+        waiting: list[Optional[str]] = []
+) -> Element:
     """
     Builds a topic entry for a given collection
     """
@@ -56,7 +61,7 @@ def _mk_content(col: Collection, name: str,
     topic: Element = {
         'id': h.gen_id(col), 'name': name,
         'consume_point': consume_point, 'parent_id': None,
-        'type': 'C', 'due': h.today(), 'last_interval': 0,
+        'type': 'C', 'due': h.tomorrow(), 'last_interval': 0,
         'rep_num': 0, 'status': 'Active', 'waiting': waiting,
         'priority': priority, 'cousins': [None]
     }
@@ -64,18 +69,23 @@ def _mk_content(col: Collection, name: str,
 
 
 # Adding extracts
-def _mk_extract(col: Collection, parent_id: str,
-                name: str) -> Element:
+def _mk_extract(col: Collection, priority: float, name: str) -> Element:
     """
     Builds a extract entry for a given collection
     """
-    parent_priority: float = col[parent_id]['priority']
     extract: Element = {
-        'id': h.gen_id(col), 'name': name,
-        'consume_point': "Process", 'parent_id': parent_id,
-        'type': "E", 'due': h.tomorrow(), 'last_interval': 1,
-        'rep_num': 0, 'status': 'Active', 'waiting': [None],
-        'priority': parent_priority, 'cousins': [None]
+        'id': h.gen_id(col),
+        'name': name,
+        'consume_point': 'Process',
+        'parent_id': None,
+        'type': 'E',
+        'due': h.tomorrow(),
+        'last_interval': 0,
+        'rep_num': 0,
+        'status': 'Active',
+        'waiting': [None],
+        'priority': priority,
+        'cousins': [None]
     }
     return extract
 
@@ -85,12 +95,19 @@ def _mk_task(col: Collection, name: str, priority: float) -> Element:
     Builds a task entry for a given collection
     """
     extract: Element = {
-        'id': h.gen_id(col), 'name': name,
-        'consume_point': 'Do', 'parent_id': None,
-        'type': "T", 'due': h.today(), 'last_interval': 0,
-        'rep_num': 0, 'status': 'Active', 'waiting': [None],
+        'id': h.gen_id(col),
+        'name': name,
+        'consume_point': 'Do',
+        'parent_id': None,
+        'type': 'T',
+        'due': h.today(),
+        'last_interval': 0,
+        'rep_num': 0,
+        'status': 'Active',
+        'waiting': [None],
         'priority': priority,
-        'cousins': [None]}
+        'cousins': [None]
+    }
     return extract
 
 
@@ -122,16 +139,20 @@ def add_content(col: Collection, name: str,
           f"{new_topic['name']!r} added to collection.")
 
 
-def add_extract(col: Collection, parent_id: str,
-                name: str) -> None:
+def add_extract(
+        col: Collection,
+        priority: float,
+        name: str
+) -> None:
     """
     Adds a new extract from a topic of a given collection
     """
-    h.check_valid_element(col, parent_id)
-    new_extract: Element = _mk_extract(col, parent_id, name)
+    new_extract: Element = _mk_extract(col, priority, name)
     col |= {new_extract['id']: new_extract}
-    print(f"(E) [{new_extract['id']}]",
-          f"{new_extract['name']!r} added to collection.")
+    print(
+        f"(E) [{new_extract['id']}]",
+        f"{new_extract['name']!r} added to collection."
+    )
 
 
 # Print Due Queue
@@ -159,8 +180,12 @@ def _sort_due(queue: Queue) -> Queue:
     after their type from extracts to topics
     """
     order = {'T': 2, 'E': 0, 'C': 1}
-    return sorted(queue, key=lambda element: (element['priority'],
-                                              order[element['type']]))
+    return sorted(
+        queue, key=lambda element: (
+            element['priority'],
+            order[element['type']]
+        )
+    )
 
 
 def _sep_contents(queue: Queue) -> Queue:
@@ -187,38 +212,46 @@ def _pick(q: Queue, s: int, pr: int) -> Queue:
     def __pick(q: Queue, s: int, pr: int) -> Queue:
         r: int = randint(1, 100)
         return (
-            [] if s == 0 else
+            [] if s == 0 or len(q) == 0 else
             [q[0]] + __pick(q[1:], (s - 1), pr) if r > pr else
             [c := choice(q)] + __pick(_remove(q, c), (s - 1), pr)
         )
-
     return __pick(q, s, pr)
 
 
 def _sep_by_type(col: Collection) -> tuple[Queue, Queue]:
-    return (_sep_contents((due := _gather_due(col))), _separate_extracts(due))
+    return (
+        _sep_contents((d := _gather_due(col))), _separate_extracts(d)
+    )
 
 
-def _build_schedule(col: Collection, size: int, rand_percent: int) -> Queue:
+def _build_schedule(col: Collection, size: int) -> Queue:
     amnt_con: int = round(size * CONTENT_PERCENTAGE)
     amnt_ext: int = size - amnt_con
     separator: tuple[Queue, Queue] = _sep_by_type(col)
-    prepare = (_pick(separator[0], amnt_con, rand_percent)
-               + _pick(separator[1], amnt_ext, rand_percent))
-    return _pick(prepare, size, rand_percent)
+    prepare = (
+        _pick(separator[0], amnt_con, CONTENT_RANDOMNESS)
+        + _pick(separator[1], amnt_ext, EXTRACT_RANDOMNESS)
+    )
+    return _pick(prepare, size, DUE_SHUFFLE)
 
 
-def list_due(col: Collection, size: int, rand_percent: int) -> None:
+def list_due(col: Collection, size: int) -> None:
     """
     Prints the nth first due items of the queue
     """
-    for element in _build_schedule(col, size, rand_percent):
-        print(
-            f"[{element['id']}] {element['name']},",
-            f"{element['consume_point']}, ({element['type']}),",
-            f"rep: {element['rep_num']}"
-            # , f"last interval: {element['last_interval']} "
-        )
+    for element in _build_schedule(col, size):
+        if element['type'] == 'E':
+            print(
+                f"{element['id']}",
+                f"[[{element['name']}]]"
+            )
+        else:
+            print(
+                f"{element['id']}",
+                f"{element['name']}",
+                f"-- {element['consume_point']}"
+            )
 
 
 def list_collection(col: Collection) -> None:
@@ -227,14 +260,15 @@ def list_collection(col: Collection) -> None:
     """
     for element in _gather_elements(col):
         for key, val in element.items():
-            print(f"{val}", end="; " if key != 'cousins' else "\n")
+            print(f'{val}', end='; ' if key != 'cousins' else '\n')
 
 
 # Actions taken on Elements
 def execute_repetition(col: Collection, element_id: str,
                        new_consume_point: Optional[str] = None) -> None:
     """
-    Calculates next due date, (optionally) change consume point and increments
+    Calculates next due date
+    (optionally) change consume point and increments
     review count of an element
     """
     h.check_valid_element(col, element_id)
@@ -242,6 +276,10 @@ def execute_repetition(col: Collection, element_id: str,
     col[element_id] = schedule_element(col[element_id])
     if new_consume_point:
         col[element_id]['consume_point'] = new_consume_point
+        if new_consume_point == 'Link':
+            col[element_id]['priority'] = (
+                col[element_id]['priority'] * 2
+            )
     print(f"Rescheduled {col[element_id]['name']!r}.")
 
 
@@ -257,7 +295,16 @@ def donify_element(col: Collection, element_id: str) -> None:
             del col[key]['waiting'][index]
             if col[key]['waiting'] == []:
                 col[key]['waiting'] = [None]
-    col[element_id]['status'] = 'Done'
+                col[key]['due'] = (
+                    h.today()
+                    + timedelta(round(CONTENT_BASEINT / 2))
+                )
+    if col[element_id]['type'] == 'C':
+        col[element_id]['status'] = 'Done'
+    else:
+        new_prio = col[element_id]['priority'] * 1.5
+        col[element_id]['priority'] = new_prio if new_prio <= 1 else 1
+        execute_repetition(col, element_id)
     print(f"Marked {col[element_id]['name']!r} as done.")
 
 
@@ -267,7 +314,7 @@ def remove_element(col: Collection, element_id: str) -> None:
     """
     h.check_valid_element(col, element_id)
     out: str = (f"Deleted [{element_id}] '{col[element_id]['name']}'"
-                + " from collection.")
+                + ' from collection.')
     del col[element_id]
     print(out)
 
@@ -280,7 +327,7 @@ def change_status(col: Collection, element_id: str, new_status: str) -> None:
     h.check_valid_status(new_status)
     col[element_id]['status'] = new_status
     print(f"Changed [{element_id}] {col[element_id]['name']!r}",
-          f"status to {new_status!r}")
+          f'status to {new_status!r}')
 
 
 def change_type(col: Collection, element_id: str, new_type: str) -> None:
@@ -290,7 +337,7 @@ def change_type(col: Collection, element_id: str, new_type: str) -> None:
     h.check_valid_element(col, element_id)
     h.check_valid_type(new_type)
     col[element_id]['type'] = new_type
-    print(f"Changed [{element_id}]",
+    print(f'Changed [{element_id}]',
           f"{col[element_id]['name']!r} type to {new_type!r}")
 
 
@@ -309,8 +356,10 @@ def change_dependece(col: Collection, element_id: str,
         col[element_id]['waiting'] = [None]
 
 
-def change_cousins(col: Collection, element_id: str,
-                   new_cousins: list[Optional[str]]) -> None:
+def change_cousins(
+        col: Collection, element_id: str,
+        new_cousins: list[Optional[str]]
+) -> None:
     """
     Changes element dependeces
     """
@@ -339,5 +388,34 @@ def change_name(col: Collection, element_id: str, new_name: str):
     """
     h.check_valid_element(col, element_id)
     col[element_id]['name'] = new_name
-    print(f"Changed [{element_id}]",
-          f"{col[element_id]['name']!r} name to {new_name!r}")
+    print(
+        f'Changed [{element_id}]',
+        f"{col[element_id]['name']!r} name to {new_name!r}"
+    )
+
+
+def _low_priority_queue(queue: Queue, percentage: float = .25) -> Queue:
+    due_today = _sort_due(queue)
+    return due_today[round(len(due_today) * percentage):]
+
+
+def postpone(col: Collection):
+
+    contents, extracts = _sep_by_type(col)
+
+    for element in _low_priority_queue(extracts):
+        element['due'] = schedule_postpone(element)
+        print(
+            f"Postponed [{element['id']}]",
+            f"{element['name']!r} to {element['due']}"
+        )
+
+    for element in _low_priority_queue(contents):
+        element['due'] = schedule_postpone(element)
+        print(
+            f"Postponed [{element['id']}]",
+            f"{element['name']!r} to {element['due']}"
+        )
+
+    for element in _gather_due(col):
+        element['due'] = h.tomorrow()

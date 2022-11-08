@@ -4,7 +4,7 @@
 import argparse
 
 
-DEFAULTPATH = '/home/vm/brain/'
+DEFAULTPATH = '/home/vm/brain'
 
 
 parser = argparse.ArgumentParser(prog='ir')
