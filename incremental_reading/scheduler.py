@@ -53,7 +53,7 @@ def scheduleElementTomorrow(element: Element, review_date: date) -> Element:
         False,
         element.kind,
         element.priority,
-        review_date + timedelta(1),
+        review_date,
         element.reps
     )
 
@@ -63,8 +63,8 @@ def rescheduledElements(collection: Collection, review_date: date) -> Collection
         due_collection = dueCollection(collection, review_date)
         unedited = orderedCollection(Collection(filter(lambda _: not(_.acted_on), due_collection)))
         reschedule = Collection(filter(lambda _: _.acted_on, due_collection))
-        skip = unedited[:round(len(due_collection) * .20)]
-        postpone = unedited[round(len(due_collection) * .20):]
+        skip = unedited[:round(len(unedited) * .20)]
+        postpone = unedited[len(skip):]
         return reschedule, skip, postpone
 
     to_update = partitionEdited(collection, review_date)

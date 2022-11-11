@@ -11,7 +11,7 @@ def main() -> None:
     if args.reschedule:
         reviewFiles(args.Path, date.today())
     else:
-        outputQueue(args.Path, date.today(), 20)
+        outputQueue(args.Path, date.today(), 30)
 
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ from datetime import date
 from mytypes import Collection, Queue
 
 def dueCollection(collection: Collection, due_date: date) -> Collection:
-    due_elements = filter(lambda _: _.due_date <= due_date, collection)
+    due_elements = filter(lambda _: _.due_date < due_date, collection)
     return Collection(due_elements)
 
 
@@ -17,7 +17,7 @@ def orderedCollection(collection: Collection) -> Collection:
 def dueQ(collection: Collection, due_date: date, size: int) -> str:
     def partition(collection: Collection) -> tuple[Collection, Collection]:
         notes = Collection(filter(lambda _: _.kind == 'Note', collection))
-        others = Collection(filter(lambda _: _.kind == 'Content', collection))
+        others = Collection(filter(lambda _: _.kind != 'Note', collection))
         return orderedCollection(notes), orderedCollection(others)
 
     def finalQ(collection: Collection) -> Collection:
